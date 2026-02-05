@@ -1,5 +1,5 @@
 package com.curso.android.module2.stream.ui.screens
-
+import com.curso.android.module2.stream.ui.components.SongFavorite // importamos la funcion de Songcard
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -31,6 +31,8 @@ import com.curso.android.module2.stream.ui.components.SongCoverMock
 import com.curso.android.module2.stream.ui.viewmodel.HomeUiState
 import com.curso.android.module2.stream.ui.viewmodel.HomeViewModel
 import org.koin.compose.viewmodel.koinViewModel
+
+import com.curso.android.module2.stream.ui.components.SongCoverMock
 
 /**
  * ================================================================================
@@ -284,9 +286,17 @@ private fun SongCard(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // Cover generado por código
-        SongCoverMock(
+        //SongCoverMock(
+           // colorSeed = song.colorSeed,
+            //size = 120.dp
+        //)
+
+        SongFavorite(
             colorSeed = song.colorSeed,
-            size = 120.dp
+            size = 120.dp,
+            isFavorite = song.favorite,
+            onFavClick = {// aquí se llama al ViewModel para cambiar a favorito
+            }
         )
 
         Spacer(modifier = Modifier.height(8.dp))

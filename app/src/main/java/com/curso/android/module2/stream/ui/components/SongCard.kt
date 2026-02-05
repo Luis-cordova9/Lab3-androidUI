@@ -36,15 +36,11 @@ fun SongFavorite(
         Icon(
             imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
             contentDescription = "Favorite",
-            tint = if (isFavorite) Color.Black else Color.White,
+            tint = if (isFavorite) Color.Red else Color.White,
             modifier = Modifier
-                .align(Alignment.BottomStart)
+                .align(Alignment.BottomEnd)
                 .padding(10.dp)
                 .size(30.dp)
-                .background(
-                    Color.Black.copy(alpha = 0.35f),
-                    shape = RoundedCornerShape(50)
-                )
                 .padding(4.dp)
                 .clip(RoundedCornerShape(50))
                 .clickable { onFavClick() }
