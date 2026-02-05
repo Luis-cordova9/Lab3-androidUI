@@ -48,7 +48,9 @@ data class Song(
     val id: String,
     val title: String,
     val artist: String,
-    val colorSeed: Int // Usado para generar gradientes únicos en SongCoverMock
+    val colorSeed: Int, // Usado para generar gradientes únicos en SongCoverMock
+
+    val favorite : Boolean = false // Campo para saber si es favorita
 )
 
 /**
@@ -66,3 +68,4 @@ data class Category(
     val name: String,
     val songs: List<Song>
 )
+
