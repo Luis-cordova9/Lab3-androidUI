@@ -18,12 +18,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
+
 @Composable
 fun SongFavorite(
     colorSeed: Int,
     size: Dp,
     isFavorite: Boolean,
-    onFavClick: () -> Unit,
+    songId: String,
+    onFavoriteClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Box(modifier = modifier) {
@@ -43,7 +45,7 @@ fun SongFavorite(
                 .size(30.dp)
                 .padding(4.dp)
                 .clip(RoundedCornerShape(50))
-                .clickable { onFavClick() }
+                .clickable { onFavoriteClick(songId) }
         )
     }
 }

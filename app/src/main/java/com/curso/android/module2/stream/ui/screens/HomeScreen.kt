@@ -126,7 +126,10 @@ fun HomeScreen(
             is HomeUiState.Success -> {
                 HomeContent(
                     categories = state.categories,
-                    onSongClick = onSongClick
+                    onSongClick = onSongClick,
+                    onFavoriteClick = { id ->
+                        viewModel.toggleFavorite(id)
+                    }
                 )
             }
 
@@ -175,7 +178,8 @@ private fun ErrorContent(message: String) {
 @Composable
 private fun HomeContent(
     categories: List<Category>,
-    onSongClick: (Song) -> Unit
+    onSongClick: (Song) -> Unit,
+    onFavoriteClick: (String) -> Unit //agruegamos el nuevo
 ) {
     /**
      * LAZYCOLUMN: Lista Vertical Eficiente
@@ -208,7 +212,8 @@ private fun HomeContent(
         ) { category ->
             CategorySection(
                 category = category,
-                onSongClick = onSongClick
+                onSongClick = onSongClick,
+                onFavoriteClick = onFavoriteClick
             )
         }
     }
@@ -223,7 +228,8 @@ private fun HomeContent(
 @Composable
 private fun CategorySection(
     category: Category,
-    onSongClick: (Song) -> Unit
+    onSongClick: (Song) -> Unit,
+    onFavoriteClick: (String) -> Unit
 ) {
     Column(
         modifier = Modifier.fillMaxWidth()
@@ -257,7 +263,8 @@ private fun CategorySection(
             ) { song ->
                 SongCard(
                     song = song,
-                    onClick = { onSongClick(song) }
+                    onClick = { onSongClick(song) },
+                    onFavClick = onFavoriteClick
                 )
             }
         }
@@ -275,7 +282,8 @@ private fun CategorySection(
 @Composable
 private fun SongCard(
     song: Song,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onFavClick: (String) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -294,9 +302,9 @@ private fun SongCard(
         SongFavorite(
             colorSeed = song.colorSeed,
             size = 120.dp,
-            isFavorite = song.favorite,
-            onFavClick = {// aquí se llama al ViewModel para cambiar a favorito
-            }
+            isFavorite = song.isFavorite,
+            songId = song.id,
+            onFavoriteClick = onFavClick
         )
 
         Spacer(modifier = Modifier.height(8.dp))
