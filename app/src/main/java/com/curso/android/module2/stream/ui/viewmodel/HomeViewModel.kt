@@ -98,6 +98,7 @@ sealed interface HomeUiState {
     ) : HomeUiState
 }
 
+private var localCategories: List<Category> = emptyList()
 /**
  * ViewModel para la pantalla Home.
  *
@@ -185,11 +186,13 @@ class HomeViewModel(
         // Simula un estado de carga breve
         _uiState.value = HomeUiState.Loading
 
-        // Carga los datos del repositorio
-        val categories = repository.getCategories()
+        // Si la lista local está vacía, la traemos del repositorio por primera vez
+        if (localCategories.isEmpty()) {
+            localCategories = repository.getCategories()
+        }
 
-        // Actualiza el estado con los datos
-        _uiState.value = HomeUiState.Success(categories)
+        // Siempre mostramos lo que hay en localCategories
+        _uiState.value = HomeUiState.Success(localCategories)
     }
 
     /**
@@ -211,18 +214,18 @@ class HomeViewModel(
     }
 
     fun toggleFavorite(id: String) {
-        val current = _uiState.value
-        if (current is HomeUiState.Success) {
-            _uiState.value = HomeUiState.Success(
-                current.categories.map { category ->
-                    category.copy(
-                        songs = category.songs.map { song ->
-                            if (song.id == id) song.copy(isFavorite = !song.isFavorite) else song
-                        }
-                    )
+        localCategories = localCategories.map { category ->
+            category.copy(
+                songs = category.songs.map { song ->
+                    if (song.id == id) {
+                        song.copy(isFavorite = !song.isFavorite)
+                    } else {
+                        song
+                    }
                 }
             )
         }
+        _uiState.value = HomeUiState.Success(localCategories)
     }
 
 }

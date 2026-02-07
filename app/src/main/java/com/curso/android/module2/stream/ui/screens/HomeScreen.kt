@@ -280,7 +280,7 @@ private fun CategorySection(
  * @param onClick Callback cuando se hace click
  */
 @Composable
-private fun SongCard(
+fun SongCard(
     song: Song,
     onClick: () -> Unit,
     onFavClick: (String) -> Unit

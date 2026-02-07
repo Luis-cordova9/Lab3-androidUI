@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Search
+import org.koin.compose.viewmodel.koinViewModel
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -37,16 +37,18 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.curso.android.module2.stream.data.repository.MusicRepository
 import com.curso.android.module2.stream.ui.navigation.HomeDestination
-import com.curso.android.module2.stream.ui.navigation.LibraryDestination
+import com.curso.android.module2.stream.ui.viewmodel.*
 import com.curso.android.module2.stream.ui.navigation.PlayerDestination
 import com.curso.android.module2.stream.ui.navigation.SearchDestination
 import com.curso.android.module2.stream.ui.screens.HomeScreen
-import com.curso.android.module2.stream.ui.screens.LibraryScreen
 import com.curso.android.module2.stream.ui.screens.PlayerScreen
-import com.curso.android.module2.stream.ui.screens.SearchScreen
+import com.curso.android.module2.stream.ui.screens.*
+import com.curso.android.module2.stream.ui.navigation.*
 import com.curso.android.module2.stream.ui.theme.StreamUITheme
 import org.koin.compose.koinInject
 import kotlin.reflect.KClass
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.Star
 
 /**
  * ================================================================================
@@ -138,7 +140,6 @@ data class BottomNavItem(
  */
 @Composable
 fun getBottomNavItems(): List<BottomNavItem> {
-    val libraryIcon = ImageVector.vectorResource(R.drawable.ic_library)
     return listOf(
         BottomNavItem(
             route = HomeDestination::class,
@@ -147,16 +148,10 @@ fun getBottomNavItems(): List<BottomNavItem> {
             unselectedIcon = { Icons.Outlined.Home }
         ),
         BottomNavItem(
-            route = SearchDestination::class,
-            label = "Search",
-            selectedIcon = { Icons.Filled.Search },
-            unselectedIcon = { Icons.Outlined.Search }
-        ),
-        BottomNavItem(
-            route = LibraryDestination::class,
-            label = "Library",
-            selectedIcon = { libraryIcon },
-            unselectedIcon = { libraryIcon }
+            route = HighlightsDestination::class,
+            label = "Favoritos",
+            selectedIcon = { Icons.Filled.Star },
+            unselectedIcon = { Icons.Outlined.Star }
         )
     )
 }
@@ -213,6 +208,8 @@ fun StreamUIApp() {
      */
     val navController = rememberNavController()
 
+    val sharedViewModel: HomeViewModel = koinViewModel()
+
     /**
      * koinInject()
      * ------------
@@ -251,8 +248,7 @@ fun StreamUIApp() {
      */
     val topBarTitle = when {
         currentDestination?.hasRoute(HomeDestination::class) == true -> "StreamUI"
-        currentDestination?.hasRoute(SearchDestination::class) == true -> "Search"
-        currentDestination?.hasRoute(LibraryDestination::class) == true -> "Your Library"
+        currentDestination?.hasRoute(HighlightsDestination::class) == true -> "Mis Favoritos"
         currentDestination?.hasRoute(PlayerDestination::class) == true -> "Now Playing"
         else -> "StreamUI"
     }
@@ -334,7 +330,7 @@ fun StreamUIApp() {
                                         when (item.route) {
                                             HomeDestination::class -> HomeDestination
                                             SearchDestination::class -> SearchDestination
-                                            LibraryDestination::class -> LibraryDestination
+                                            HighlightsDestination::class -> HighlightsDestination
                                             else -> HomeDestination
                                         }
                                     ) {
@@ -378,30 +374,32 @@ fun StreamUIApp() {
                 startDestination = HomeDestination,
                 modifier = Modifier.padding(paddingValues)
             ) {
-                /**
-                 * DESTINO: Home Screen
-                 * --------------------
-                 * composable<T> define un destino para el tipo T.
-                 *
-                 * HomeDestination es un object (sin argumentos),
-                 * por lo que el lambda no necesita extraer nada.
-                 */
                 composable<HomeDestination> {
                     HomeScreen(
+                        viewModel = sharedViewModel,
                         onSongClick = { song ->
-                            /**
-                             * NAVEGACIÓN TYPE-SAFE
-                             * --------------------
-                             * Navegamos a PlayerDestination pasando el songId.
-                             *
-                             * El compilador verifica que:
-                             * - PlayerDestination existe
-                             * - songId es del tipo correcto (String)
-                             */
-                            navController.navigate(PlayerDestination(songId = song.id))
-                        }
+                        navController.navigate(PlayerDestination(songId = song.id))
+                    })
+                }
+
+                composable<HighlightsDestination> {
+                    HighlightsScreen(
+                        viewModel = sharedViewModel,
+                        onSongClick = { songId ->
+                        navController.navigate(PlayerDestination(songId = songId))
+                    })
+                }
+
+                composable<PlayerDestination> { backStackEntry ->
+                    val destination = backStackEntry.toRoute<PlayerDestination>()
+                    val song = repository.getSongById(destination.songId)
+                    PlayerScreen(
+                        song = song,
+                        onBackClick = { navController.popBackStack() }
                     )
                 }
+
+            }
 
                 /**
                  * DESTINO: Search Screen
@@ -411,26 +409,7 @@ fun StreamUIApp() {
                  * Esta pantalla es parte del BottomNavigation.
                  * Permite buscar canciones y navegar al Player.
                  */
-                composable<SearchDestination> {
-                    SearchScreen(
-                        onSongClick = { song ->
-                            /**
-                             * REUTILIZACIÓN DE DESTINOS
-                             * -------------------------
-                             * Usamos el MISMO PlayerDestination que usa HomeScreen.
-                             *
-                             * Esto demuestra que los destinos son reutilizables:
-                             * - No importa DESDE DÓNDE navegas
-                             * - Solo importa A DÓNDE vas y con qué datos
-                             */
-                            navController.navigate(PlayerDestination(songId = song.id))
-                        },
-                        onBackClick = {
-                            // En BottomNavigation, Search es un tab principal
-                            // No necesita back manual, el usuario usa los tabs
-                        }
-                    )
-                }
+
 
                 /**
                  * DESTINO: Library Screen
@@ -440,14 +419,7 @@ fun StreamUIApp() {
                  * Es el tercer tab del BottomNavigation.
                  * Actualmente solo muestra playlists sin navegación adicional.
                  */
-                composable<LibraryDestination> {
-                    LibraryScreen(
-                        onPlaylistClick = { playlist ->
-                            // TODO: Navegar al detalle de la playlist
-                            // Por ahora no hace nada
-                        }
-                    )
-                }
+
 
                 /**
                  * DESTINO: Player Screen
@@ -460,27 +432,8 @@ fun StreamUIApp() {
                  * cualquier tab. El BottomNavigation se oculta cuando
                  * estamos en esta pantalla.
                  */
-                composable<PlayerDestination> { backStackEntry ->
-                    // Extrae los argumentos de navegación de forma type-safe
-                    val destination = backStackEntry.toRoute<PlayerDestination>()
 
-                    // Busca la canción en el repository
-                    val song = repository.getSongById(destination.songId)
-
-                    PlayerScreen(
-                        song = song,
-                        onBackClick = {
-                            /**
-                             * popBackStack()
-                             * --------------
-                             * Navega hacia atrás en el back stack.
-                             * Vuelve al tab desde donde se abrió el Player.
-                             */
-                            navController.popBackStack()
-                        }
-                    )
-                }
             }
         }
     }
-}
+
