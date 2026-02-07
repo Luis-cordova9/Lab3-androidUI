@@ -26,12 +26,7 @@ fun HighlightsScreen(
 
         when (val state = uiState) {
             is HomeUiState.Success -> {
-                /**
-                 * EL FILTRO (Aquí suele estar el error):
-                 * Como las canciones están dentro de categorías,
-                 * primero "aplanamos" todas las listas de canciones en una sola
-                 * y luego filtramos las que tengan isFavorite == true.
-                 */
+
                 val favorites = state.categories
                     .flatMap { it.songs }
                     .filter { it.isFavorite }
